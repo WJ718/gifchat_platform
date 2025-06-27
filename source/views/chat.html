@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h2>{{ room.roomName }}</h2>
+
+  <div id="chat-log" class="chat-log">
+    {% for chat in chats %}
+      <p><strong>{{ chat.user.nick }}</strong>: 
+        {% if chat.gif %}
+          <img src="{{ chat.gif }}" class="chat-gif" />
+        {% else %}
+          {{ chat.message }}
+        {% endif %}
+      </p>
+    {% endfor %}
+  </div>
+
+  <form id="chat-form" class="form">
+    <input type="text" id="chat-input" placeholder="메시지 입력" />
+    <input type="file" id="gif-input" />
+    <button type="submit" class="btn">보내기</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const roomId = {{ room.id }};
+    const user = {
+      id: {{ user.id }},
+      nick: "{{ user.nick }}"
+    };
+
+    // 서버에 방 입장 알림
+    socket.emit('join', roomId, user);
+
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('chat-input');
+    const gifInput = document.getElementById('gif-input');
+    const chatLog = document.getElementById('chat-log');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      const file = gifInput.files[0];
+
+      if (!message && !file) return; // 빈 메시지 방지
+
+      if (file) {
+        const formData = new FormData();
+        formData.append('gif', file);
+
+        try {
+          const res = await fetch(`/room/${roomId}/gif`, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+
+          socket.emit('chat', {
+            roomId,
+            gif: data.url,
+            message,
+            user
+          });
+        } catch (err) {
+          console.error('파일 업로드 실패:', err);
+        }
+      } else {
+        socket.emit('chat', {
+          roomId,
+          message,
+          user
+        });
+      }
+
+      input.value = '';
+      gifInput.value = '';
+    });
+
+    socket.on('chat', (data) => {
+      const p = document.createElement('p');
+      let content = `<strong>${data.user}</strong>: `;
+
+      if (data.message) {
+        content += data.message;
+      }
+
+      if (data.gif) {
+        content += `<br><img src="${data.gif}" class="chat-gif" />`;
+      }
+
+      p.innerHTML = content;
+      chatLog.appendChild(p);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    });
+  </script>
+{% endblock %}

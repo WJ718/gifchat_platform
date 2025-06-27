@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="main-container">
+    <h1 class="title">MyChatApp</h1>
+
+    {% if user %}
+      <p class="welcome"><strong>{{ user.nick }}</strong>님, 환영합니다!</p>
+
+      <div class="card">
+        <h2>방 만들기</h2>
+        <form action="/room" method="post" class="form-row">
+          <input type="text" name="roomName" placeholder="방 이름" required />
+          <button type="submit" class="btn">생성</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>채팅방 목록</h2>
+        <ul class="room-list">
+          {% for room in rooms %}
+            <li class="room-item">
+              <span class="room-name">{{ room.roomName }}</span>
+              <div class="room-actions">
+                <form action="/room/{{ room.id }}" method="get">
+                  <button class="btn small">입장</button>
+                </form>
+                {% if room.ownerId == user.id %}
+                  <form action="/room/{{ room.id }}/delete" method="post">
+                    <button class="btn small danger">삭제</button>
+                  </form>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <form action="/auth/logout" method="get" class="logout-form">
+        <button type="submit" class="btn logout">로그아웃</button>
+      </form>
+
+    {% else %}
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      <div class="card">
+        <h2>로그인</h2>
+        <form action="/auth/login" method="post" class="form">
+          <input type="email" name="email" placeholder="이메일" required />
+          <input type="password" name="password" placeholder="비밀번호" required />
+          <button type="submit" class="btn">로그인</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>회원가입</h2>
+        <form action="/auth/join" method="post" class="form">
+          <input type="text" name="nick" placeholder="닉네임" required />
+          <input type="email" name="email" placeholder="이메일" required />
+          <input type="password" name="password" placeholder="비밀번호" required />
+          <button type="submit" class="btn">가입하기</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title | default("MyChatApp") }}</title>
+  <link rel="stylesheet" href="/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+  <header class="navbar">
+    <nav>
+      {% if user %}
+        <a href="/auth/logout">로그아웃</a>
+        <a href="/profile">{{ user.nick }}의 프로필</a>
+      {% else %}
+        <a href="/auth/login">로그인</a>
+        <a href="/auth/join">회원가입</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
